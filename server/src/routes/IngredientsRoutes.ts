@@ -1,7 +1,6 @@
 import HttpStatusCodes from '@src/constants/HttpStatusCodes';
 
 import IngredientsService from '@src/services/IngredientsService';
-import { IIngredient } from '@src/models/Ingredient';
 import { IReq, IRes } from './types/express/misc';
 
 
@@ -12,7 +11,7 @@ import { IReq, IRes } from './types/express/misc';
  */
 async function fetchIngredients(req: IReq<{url: string}>, res: IRes) {
   const { url } = req.body;
-  const ingredients: IIngredient[] =
+  const ingredients =
       await IngredientsService.fetchIngredients(url);
   return res.status(HttpStatusCodes.OK).json({ ingredients });
 }
