@@ -19,7 +19,7 @@ import HttpStatusCodes from '@src/constants/HttpStatusCodes';
 
 import { NodeEnvs } from '@src/constants/misc';
 import { RouteError } from '@src/other/classes';
-
+import ingredientsRouter from '@src/routes/IngredientsRouter';
 
 // **** Variables **** //
 
@@ -45,6 +45,7 @@ if (EnvVars.NodeEnv === NodeEnvs.Production.valueOf()) {
 
 // Add APIs, must be after middleware
 app.use(Paths.Base, BaseRouter);
+app.use('/ingredients', ingredientsRouter);
 
 // Add error handler
 app.use((

@@ -16,5 +16,10 @@ export default {
     Add: '/add',
     Update: '/update',
     Delete: '/delete/:id',
+    Post: '/post',
+  },
+  Ingredients: {
+    Base: '/ingredients',
+    Fetch: '/fetch',
   },
 } as const;
