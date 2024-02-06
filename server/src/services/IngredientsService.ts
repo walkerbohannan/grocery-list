@@ -38,8 +38,29 @@ const measurements = [
   'g',
 ];
 
-function getMeasurement(quantity: string) {
-    //todo
+function firstSpaceIndex(quantity: string): number {
+  for (let i = 0; i < quantity.length; i++) {
+    if (quantity[i] === ' ') {
+      return i;
+    }
+  }
+  return quantity.length;
+}
+
+function getIIngredient(quantity: string, ingredient: string): IIngredient {
+  let measurement = '';
+  const firstWord = ingredient.substring(0, firstSpaceIndex(ingredient));
+  if (measurements.includes(firstWord)) {
+    measurement = firstWord;
+    ingredient = ingredient.substring(
+      firstSpaceIndex(ingredient) + 1,
+      ingredient.length);
+  }
+  return {
+    quantity,
+    measurement,
+    ingredient,
+  } as IIngredient;
 }
 
 async function fetchIngredients(url: string): Promise<IngredientsResponse> {
@@ -67,13 +88,8 @@ async function fetchIngredients(url: string): Promise<IngredientsResponse> {
       }
     }
 
-    const measurement = getMeasurement(quantity);
+    const iIngredient = getIIngredient(quantity, ingredient);
 
-    const iIngredient = {
-      quantity,
-      measurement: '',
-      ingredient,
-    } as IIngredient;
     finalIngredients.push(iIngredient);
   }
 
