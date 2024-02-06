@@ -7,7 +7,7 @@ export default function RecipeSearch() {
         const form = e.target;
         const formData = new FormData(form)
 
-        const ingredientList = fetch('http://localhost:5001/ingredients', { method: form.method, body: formData});
+        const ingredientList = fetch('http://localhost:8000/ingredients', { method: form.method, body: formData});
         console.log(ingredientList)
     }
 
