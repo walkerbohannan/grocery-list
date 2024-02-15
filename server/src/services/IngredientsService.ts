@@ -1,21 +1,6 @@
-import {IIngredient, IngredientsResponse} from '@src/models/Ingredient';
+import {IIngredient, IngredientsResponse} from "../models/Ingredient";
 import * as cheerio from 'cheerio';
-
-interface ItemNode {
-    data: string,
-    type: string,
-}
-
-interface Element {
-    attribs: {
-        class: string
-    },
-    children: [
-        {
-            data: string
-        }
-    ]
-}
+import {Element, ItemNode} from '../models/ParsedHtmlElements';
 
 const measurements = [
   'tablespoon',
@@ -63,16 +48,18 @@ function getIIngredient(quantity: string, ingredient: string): IIngredient {
   } as IIngredient;
 }
 
-async function fetchIngredients(url: string): Promise<IngredientsResponse> {
+async function fetchHtml(url: string) {
   const response = await fetch(url);
-  const html = await response.text();
+  return await response.text();
+}
 
+function extractNyTimesIngredients(html: string, url: string) {
   const $ = cheerio.load(html);
   const $ingredients = $('[class*=ingredient_ingredient]');
+  const $titleNode: ItemNode = $('[class*=title-display]')[0].children[0] as ItemNode;
 
   const finalIngredients = [];
 
-  // $('[class*=ingredient_ingredient]')[0].children[0].children[0].data
   for (const item of $ingredients) {
     // iterate through each line in ingredient list
     let quantity = '';
@@ -81,7 +68,7 @@ async function fetchIngredients(url: string): Promise<IngredientsResponse> {
     const itemContents: Element[] = item.children as unknown as Element[];
     for (const quantityOrIngredient of itemContents) {
       if (quantityOrIngredient.attribs.class &&
-          quantityOrIngredient.attribs.class.includes('quantity')) {
+        quantityOrIngredient.attribs.class.includes('quantity')) {
         quantity = quantityOrIngredient.children[0].data;
       } else {
         ingredient = quantityOrIngredient.children[0].data;
@@ -93,18 +80,18 @@ async function fetchIngredients(url: string): Promise<IngredientsResponse> {
     finalIngredients.push(iIngredient);
   }
 
-  const titleNode: ItemNode =
-      $('[class*=title-display]')[0].children[0] as ItemNode;
-  const ingredientsResponse =
-      {
-        ingredients: finalIngredients,
-        url,
-        title: titleNode.data,
-      } as IngredientsResponse;
+  return {
+    ingredients: finalIngredients,
+    url,
+    title: $titleNode.data,
+  } as IngredientsResponse;
+}
 
-  return Promise.resolve(ingredientsResponse);
+async function fetchIngredients(url: string): Promise<IngredientsResponse> {
+  return Promise.resolve(extractNyTimesIngredients(await fetchHtml(url), url));
 }
 
 export default {
   fetchIngredients,
+  extractNyTimesIngredients,
 } as const;

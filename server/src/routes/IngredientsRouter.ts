@@ -1,11 +1,11 @@
-import { Router } from 'express';
-import { IngredientRequest } from '@src/models/Ingredient';
-import ingredientsService from '@src/services/IngredientsService';
+import { Router, Request, Response } from 'express';
+import { IngredientRequest } from '../models/Ingredient';
+import ingredientsService from '../services/IngredientsService';
 
 
 const ingredientsRouter = Router();
 
-ingredientsRouter.post('/', async (req, res) => {
+ingredientsRouter.post('/', async (req: Request, res: Response) => {
   const {url} = req.body as IngredientRequest;
   const ingredients = await ingredientsService.fetchIngredients(url);
 
