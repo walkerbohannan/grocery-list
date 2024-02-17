@@ -1,6 +1,7 @@
 import {IIngredient, IngredientsResponse} from "../models/Ingredient";
 import * as cheerio from 'cheerio';
 import {Element, ItemNode} from '../models/ParsedHtmlElements';
+import {CheerioAPI} from "cheerio";
 
 const measurements = [
   'tablespoon',
@@ -53,8 +54,7 @@ async function fetchHtml(url: string) {
   return await response.text();
 }
 
-function extractNyTimesIngredients(html: string, url: string) {
-  const $ = cheerio.load(html);
+function extractNyTimesIngredients($: CheerioAPI, url: string) {
   const $ingredients = $('[class*=ingredient_ingredient]');
   const $titleNode: ItemNode = $('[class*=title-display]')[0].children[0] as ItemNode;
 
@@ -87,11 +87,65 @@ function extractNyTimesIngredients(html: string, url: string) {
   } as IngredientsResponse;
 }
 
+function parseSmittenKitchenIngredient(data: string) {
+  let quantity = "";
+  let ingredient = "";
+  let measurement = "";
+  let strings = data.split(" ");
+  let conversion = false
+  for (let string of strings) {
+
+    // omit conversions in parentheses
+    if (string.startsWith("(")) {
+      conversion = true
+    }
+
+    if (!conversion) {
+      if (parseInt(string)) {
+        quantity += string + " "
+      } else if (measurements.includes(string)) {
+        measurement = string
+      } else if (string == 'plus') {
+      } else {
+        ingredient += string + " "
+      }
+    }
+
+    if (string.endsWith(")") && conversion) {
+      conversion = false
+    }
+  }
+
+  return {
+    quantity: quantity.trim(),
+    ingredient: ingredient.trim(),
+    measurement: measurement.trim()
+  }
+}
+
+function extractSmittenKitchenIngredients($: CheerioAPI, url: string) {
+  const $titleNode = $('[property*=title]')[0].attribs.content
+  let ingredients = $('.ingredient');
+  const recipeIngredients = [];
+  for (let index = 0; index < ingredients.length; index++) {
+    let child = ingredients[index].children[0] as ItemNode;
+    recipeIngredients.push(parseSmittenKitchenIngredient(child.data));
+  }
+  return {
+    ingredients: recipeIngredients,
+    url,
+    title: $titleNode
+  }
+}
+
 async function fetchIngredients(url: string): Promise<IngredientsResponse> {
-  return Promise.resolve(extractNyTimesIngredients(await fetchHtml(url), url));
+  const html = await fetchHtml(url);
+  const $ = cheerio.load(html);
+  return Promise.resolve(extractNyTimesIngredients($, url));
 }
 
 export default {
   fetchIngredients,
   extractNyTimesIngredients,
+  extractSmittenKitchenIngredients
 } as const;
