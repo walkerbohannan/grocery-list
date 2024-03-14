@@ -3,26 +3,62 @@ import * as cheerio from 'cheerio';
 import {Element, ItemNode} from '../models/ParsedHtmlElements';
 import {CheerioAPI} from "cheerio";
 
-const measurements = [
-  'tablespoon',
-  'tablespoons',
-  'cup',
-  'cups',
-  'pound',
-  'pounds',
-  'teaspoon',
-  'teaspoons',
-  'gram',
-  'grams',
-  'ounce',
-  'ounces',
-  'oz',
-  'lb' ,
-  'lbs' ,
-  'kg',
-  'kgs',
-  'g',
-];
+const measurementsToG = new Map<String, number>([
+  [
+    'tablespoon', 14.175
+  ],
+  [
+    'tablespoons', 14.175
+  ],
+  [
+    'cup', 340
+  ],
+  [
+    'cups', 340
+  ],
+  [
+    'pound', 453.592
+  ],
+  [
+    'pounds', 453.592
+  ],
+  [
+    'lb', 453.592
+  ],
+  [
+    'lbs', 453.592
+  ],
+  [
+    'teaspoon', 5.69
+  ],
+  [
+    'teaspoons', 5.69
+  ],
+  [
+    'gram', 1
+  ],
+  [
+    'grams', 1
+  ],
+  [
+    'g', 1
+  ],
+  [
+    'ounce', 28.3495
+  ],
+  [
+    'ounces', 28.3495
+  ],
+  [
+    'oz', 28.3495
+  ],
+  [
+    'kg', 1000
+  ],
+  [
+    'kgs', 1000
+  ],
+]);
 
 function firstSpaceIndex(quantity: string): number {
   for (let i = 0; i < quantity.length; i++) {
@@ -36,7 +72,7 @@ function firstSpaceIndex(quantity: string): number {
 function getIIngredient(quantity: string, ingredient: string): IIngredient {
   let measurement = '';
   const firstWord = ingredient.substring(0, firstSpaceIndex(ingredient));
-  if (measurements.includes(firstWord)) {
+  if (measurementsToG.has(firstWord)) {
     measurement = firstWord;
     ingredient = ingredient.substring(
       firstSpaceIndex(ingredient) + 1,
@@ -87,14 +123,34 @@ function extractNyTimesIngredients($: CheerioAPI, url: string) {
   } as IngredientsResponse;
 }
 
+class MeasurementNotFound implements Error {
+  constructor(message: string) {
+    this.message = message;
+    this.name = "MeasurementNotFound"
+  }
+
+  message: string;
+  name: string;
+}
+
+function convertMeasurements(from: string, to: string, value: number): number {
+  if (!measurementsToG.has(from) || !measurementsToG.has(to)) {
+    throw new MeasurementNotFound(`Could not convert measurement: unknown measurement $from`)
+  }
+
+  const measurementInGrams =  value * measurementsToG.get(from)!
+  return measurementInGrams / measurementsToG.get(to)!;
+}
+
 function parseSmittenKitchenIngredient(data: string) {
   let quantity = "";
   let ingredient = "";
   let measurement = "";
   let strings = data.split(" ");
   let conversion = false
-  for (let string of strings) {
-
+  let index = 0;
+  while (index < strings.length) {
+    const string = strings[index];
     // omit conversions in parentheses
     if (string.startsWith("(")) {
       conversion = true
@@ -103,9 +159,30 @@ function parseSmittenKitchenIngredient(data: string) {
     if (!conversion) {
       if (parseInt(string)) {
         quantity += string + " "
-      } else if (measurements.includes(string)) {
+      } else if (measurementsToG.has(string)) {
         measurement = string
       } else if (string == 'plus') {
+        if (index + 1 < strings.length) {
+          index++;
+          let quantityToAdd = strings[index];
+          if (parseInt(quantityToAdd)) {
+            if (index + 1 < strings.length) {
+              index++;
+              let measurementToAdd = strings[index];
+              if (measurementsToG.has(measurementToAdd)) {
+                let convertedQuantityToAdd = convertMeasurements(measurementToAdd, measurement, parseInt(quantityToAdd));
+                let newQuantity = eval(quantity) + convertedQuantityToAdd;
+                quantity = "" + newQuantity;
+              } else {
+                throw new MeasurementNotFound(`Could not find measurement ${measurementToAdd}`)
+              }
+            } else {
+              throw new MeasurementNotFound("Found end of ingredient...");
+            }
+          } else {
+            throw new MeasurementNotFound("Not a number to add to measurement.");
+          }
+        }
       } else {
         ingredient += string + " "
       }
@@ -114,6 +191,8 @@ function parseSmittenKitchenIngredient(data: string) {
     if (string.endsWith(")") && conversion) {
       conversion = false
     }
+
+    index++;
   }
 
   return {
@@ -139,7 +218,7 @@ function extractSmittenKitchenIngredients($: CheerioAPI, url: string) {
 }
 
 async function fetchIngredients(url: string): Promise<IngredientsResponse> {
-  const html = await fetchHtml(url);
+  const html = await fetchHtml(url); //TODO proper handling of invalid URLs
   const $ = cheerio.load(html);
   return Promise.resolve(extractNyTimesIngredients($, url));
 }

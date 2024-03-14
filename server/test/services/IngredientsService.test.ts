@@ -52,7 +52,7 @@ describe('IngredientsService', () => {
                     {quantity:'2',measurement:'ounces',ingredient:'semi- or bittersweet chocolate, finely chopped'},
                     {quantity:'12',measurement:'ounces',ingredient:'fresh or defrosted raspberries'},
                     {quantity:'2',measurement:'tablespoons',ingredient:'fresh lemon juice'},
-                    {quantity:'1/2 cup plus 2 tablespoons',measurement:'tablespoons',ingredient:'granulated sugar'},
+                    {quantity:'0.5833823529411765',measurement:'cup',ingredient:'granulated sugar'},
                     {quantity:'6',measurement:'',ingredient:'large egg yolks'},
                     {quantity:'3',measurement:'tablespoons',ingredient:'unsalted butter'},
                     {quantity:'4',measurement:'ounces',ingredient:'semi- or bittersweet chocolate, finely chopped'},
