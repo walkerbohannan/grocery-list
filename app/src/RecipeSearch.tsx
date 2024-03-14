@@ -1,13 +1,24 @@
-import React from "react";
+import React, {useState} from 'react';
 import './RecipeSearch.css'
 
 export default function RecipeSearch() {
+
+  const [errorMessage, setErrorMessage] = useState({
+    fromFetch: ''
+  })
     function handleSubmit(e: any) {
         e.preventDefault()
         const form = e.target;
         const formData = new FormData(form)
 
-        const ingredientList = fetch('http://localhost:8000/ingredients', { method: form.method, body: formData});
+        const ingredientList =
+          fetch('http://localhost:8000/ingredients', { method: form.method, body: formData})
+            .catch(reason => {
+              setErrorMessage({
+                fromFetch: "Could not fetch ingredients from website: " + reason.message
+              })
+              console.error(reason.message)
+            });
         console.log(ingredientList)
     }
 
@@ -22,6 +33,10 @@ export default function RecipeSearch() {
             </label>
             <br/>
             <button type="submit">Fetch ingredients</button>
+            <div>
+              <br/>
+              {errorMessage['fromFetch'] ? errorMessage['fromFetch'] : <></>}
+            </div>
         </form>
 );
 }
