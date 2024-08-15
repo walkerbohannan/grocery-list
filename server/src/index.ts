@@ -9,12 +9,12 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
+app.options('*', cors())
 app.use(express.json())
-app.use(cors())
 app.use(express.urlencoded({extended: true}));
 
 app.get("/", (req: Request, res: Response) => {
-    res.send("Express + TypeScript Server");
+    res.send("Express + TypeScript Server :D");
 });
 
 app.use('/ingredients', ingredientsRouter);
