@@ -5,3 +5,40 @@
 .recipe-search-textarea {
     margin-left: 10px;
 }
+
+.recipe-and-ingredients {
+    text-align: left;
+    margin-left: 20px;
+}
+
+.recipe-search-box {
+    text-align: center;
+}
+
+.input-box {
+    width: 500px;
+}
+
+.search-button {
+    margin-left: 5px;
+}
+
+/* unvisited link */
+a:link {
+    color: red;
+}
+
+/* visited link */
+a:visited {
+    color: green;
+}
+
+/* mouse over link */
+a:hover {
+    color: hotpink;
+}
+
+/* selected link */
+a:active {
+    color: blue;
+}

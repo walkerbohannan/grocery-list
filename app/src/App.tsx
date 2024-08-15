@@ -1,8 +1,14 @@
 import React from 'react';
 import './App.css';
 import RecipeSearch from "./RecipeSearch";
+import RecipeGroceriesDisplay from './RecipeGroceriesDisplay';
+
+import { useState } from 'react';
 
 function App() {
+
+  const [recipes, setRecipes] = useState({})
+
   return (
     <div className="App">
       <header className="App-header">
@@ -10,6 +16,7 @@ function App() {
       </header>
       <div>
         <RecipeSearch />
+        <RecipeGroceriesDisplay recipes={recipes}/>
       </div>
     </div>
   );
